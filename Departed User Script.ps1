@@ -13,7 +13,7 @@ Disable-ADAccount -Identity $username -Credential $credientials
 #Remove all memberships from AD account
 $membershipgroups = Get-ADPrincipalGroupMembership -Identity $username
 foreach ($membership in $membershipgroups){
-    if ($membership.distinguishedName -eq 'CN=Domain Users,OU=General SG,OU=Security Groups,OU=Groups,DC=DOI,DC=NYCNET')
+    if ($membership.distinguishedName -eq 'Domain Users DistinguishedName')
     {
     continue
     }
@@ -22,4 +22,4 @@ foreach ($membership in $membershipgroups){
 
 #Move AD account to Departed User's OU
 $username_details = Get-ADUser -Identity $username
-Move-ADObject -Identity $username_details.distinguishedName -TargetPath 'OU=Departed Users,DC=DOI,DC=NYCNET' -Credential $credientials
+Move-ADObject -Identity $username_details.distinguishedName -TargetPath 'Departed UserOU CN' -Credential $credientials

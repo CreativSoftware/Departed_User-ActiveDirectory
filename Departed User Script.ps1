@@ -4,16 +4,24 @@ Import-Module ActiveDirectory
 $username = Read-Host -Prompt "Please enter the username of the terminated account"
 
 #Input your domain admin credentials
-$domain_username = Read-Host -Prompt "Enter your domain\username"
-$credientials = Get-Credential -UserName $domain_username -Message 'Enter Password'
+$From = Read-Host -Prompt "Please enter YOUR Email Address"
+$domain_username = Read-Host -Prompt "Enter YOUR ADMIN domain\username"
+$credientials = Get-Credential -UserName $domain_username -Message 'Enter Admin Password'
+
+#Email Setup
+$EmailTo = "desktoptechs@doi.nyc.gov", "SecurityAlert@doi.nyc.gov"
+
+#Assigned memberships
+$assignedgroups = Get-ADPrincipalGroupMembership -Identity $username | Select-Object Name | Out-String
 
 #Disable user account
 Disable-ADAccount -Identity $username -Credential $credientials
 
 #Remove all memberships from AD account
 $membershipgroups = Get-ADPrincipalGroupMembership -Identity $username
+
 foreach ($membership in $membershipgroups){
-    if ($membership.distinguishedName -eq 'Domain Users DistinguishedName')
+    if ($membership.distinguishedName -eq 'DistiguishedName')
     {
     continue
     }
@@ -22,4 +30,27 @@ foreach ($membership in $membershipgroups){
 
 #Move AD account to Departed User's OU
 $username_details = Get-ADUser -Identity $username
-Move-ADObject -Identity $username_details.distinguishedName -TargetPath 'Departed UserOU CN' -Credential $credientials
+Move-ADObject -Identity $username_details.distinguishedName -TargetPath 'DistiguishedName' -Credential $credientials
+
+# Enter the login name of departed user ex. "gjohnson"
+$Folder_Name = $username
+
+# Create the folder on Home and Profile Archive
+$Path1 = "\\Server\Path\$Folder_Name"
+New-Item -Path $Path1 -ItemType Directory 
+$Path2 = "\\Server\Path\$Folder_Name"
+New-Item -Path $Path2 -ItemType Directory 
+
+$Source_Home_Folder = "\\Server\Path\home_folder\$Folder_Name"
+$Destination_Home_Folder = "\\Server\HOME_ARCHIVE\$Folder_name"
+
+$Source_Profile_folder = "\\Server\Path\$Folder_name"
+$Destination_Profile_folder = "\\Server\Path\$Folder_name"
+
+#--------------Execute Command--------------------------------------------
+robocopy $Source_Home_Folder $Destination_Home_Folder /COPYALL /Z /E /W:1 /R:2 /tee /Move 
+robocopy $Source_Profile_folder $Destination_Profile_folder /COPYALL /Z /E /W:1 /R:2 /tee /Move 
+
+#--------------Send Email when completed----------------------------------
+$fullname = $username_details.Name
+Send-MailMessage -From $From -To $EmailTo -Subject "Departed User $fullname" -body "The Departed account $fullname is now completed. Their home and profile folders have been moved to the Archived Server. Here is a list of Group Memberships he/she was assigned to: `n$assignedgroups" -SmtpServer 'smtp.doi.nycnet' -Port '25'

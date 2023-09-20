@@ -1,12 +1,12 @@
 Import-Module ActiveDirectory
 
-#Prompt for the username of terminated user
-$username = Read-Host -Prompt "Please enter the username of the terminated account"
-
 #Input your domain admin credentials
 $From = Read-Host -Prompt "Please enter YOUR Email Address"
 $domain_username = Read-Host -Prompt "Enter YOUR ADMIN domain\username"
 $credientials = Get-Credential -UserName $domain_username -Message 'Enter Admin Password'
+
+#Prompt for the username of terminated user
+$username = Read-Host -Prompt "Please enter the username of the terminated account"
 
 #Email Setup
 $EmailTo = "desktoptechs@doi.nyc.gov", "SecurityAlert@doi.nyc.gov"
@@ -16,6 +16,13 @@ $assignedgroups = Get-ADPrincipalGroupMembership -Identity $username | Select-Ob
 
 #Disable user account
 Disable-ADAccount -Identity $username -Credential $credientials
+
+#clear the Manager and Direct report fields
+Set-ADUser -Identity $username -Clear Manager -Credential $credientials
+$directreports = Get-ADUser -Identity $username -properties DirectReports | select-object -ExpandProperty DirectReports
+foreach($user in $directreports){
+    Set-ADUser -Identity $user -Clear Manager -Credential $credientials
+}
 
 #Remove all memberships from AD account
 $membershipgroups = Get-ADPrincipalGroupMembership -Identity $username
@@ -32,10 +39,8 @@ foreach ($membership in $membershipgroups){
 $username_details = Get-ADUser -Identity $username
 Move-ADObject -Identity $username_details.distinguishedName -TargetPath 'DistiguishedName' -Credential $credientials
 
-# Enter the login name of departed user ex. "gjohnson"
-$Folder_Name = $username
-
 # Create the folder on Home and Profile Archive
+$Folder_Name = $username
 $Path1 = "\\Server\Path\$Folder_Name"
 New-Item -Path $Path1 -ItemType Directory 
 $Path2 = "\\Server\Path\$Folder_Name"

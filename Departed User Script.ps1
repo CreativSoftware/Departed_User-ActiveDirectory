@@ -40,21 +40,23 @@ $username_details = Get-ADUser -Identity $username
 Move-ADObject -Identity $username_details.distinguishedName -TargetPath 'DistiguishedName' -Credential $credientials
 
 # Create the folder on Home and Profile Archive
-$Folder_Name = $username
-$Path1 = "\\Server\Path\$Folder_Name"
-New-Item -Path $Path1 -ItemType Directory 
-$Path2 = "\\Server\Path\$Folder_Name"
-New-Item -Path $Path2 -ItemType Directory 
-
-$Source_Home_Folder = "\\Server\Path\home_folder\$Folder_Name"
-$Destination_Home_Folder = "\\Server\HOME_ARCHIVE\$Folder_name"
-
-$Source_Profile_folder = "\\Server\Path\$Folder_name"
-$Destination_Profile_folder = "\\Server\Path\$Folder_name"
-
-#--------------Execute Command--------------------------------------------
-robocopy $Source_Home_Folder $Destination_Home_Folder /COPYALL /Z /E /W:1 /R:2 /tee /Move 
-robocopy $Source_Profile_folder $Destination_Profile_folder /COPYALL /Z /E /W:1 /R:2 /tee /Move 
+Invoke-Command -ComputerName "doidc02" -Credential $credientials -ScriptBlock {
+    $Folder_Name = $using:username
+    $Path1 = "\\Server\Path\$Folder_Name"
+    New-Item -Path $Path1 -ItemType Directory 
+    $Path2 = "\\Server\Path\$Folder_Name"
+    New-Item -Path $Path2 -ItemType Directory 
+    
+    $Source_Home_Folder = "\\Server\Path\home_folder\$Folder_Name"
+    $Destination_Home_Folder = "\\Server\HOME_ARCHIVE\$Folder_name"
+    
+    $Source_Profile_folder = "\\Server\Path\$Folder_name"
+    $Destination_Profile_folder = "\\Server\Path\$Folder_name"
+    
+    #--------------Execute Command--------------------------------------------
+    robocopy $Source_Home_Folder $Destination_Home_Folder /COPYALL /Z /E /W:1 /R:2 /tee /Move 
+    robocopy $Source_Profile_folder $Destination_Profile_folder /COPYALL /Z /E /W:1 /R:2 /tee /Move 
+}
 
 #--------------Send Email when completed----------------------------------
 $fullname = $username_details.Name

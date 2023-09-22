@@ -5,8 +5,32 @@ $From = Read-Host -Prompt "Please enter YOUR Email Address"
 $domain_username = Read-Host -Prompt "Enter YOUR ADMIN domain\username"
 $credientials = Get-Credential -UserName $domain_username -Message 'Enter Admin Password'
 
-#Prompt for the username of terminated user
-$username = Read-Host -Prompt "Please enter the username of the terminated account"
+#Ask for Terminated useraccount, check to make sure the username is active.
+$validusername = $true
+while ($validusername){
+    $username_test = Read-Host -Prompt "Please enter the username of the terminated account"
+    try {
+        $username_details = Get-ADUser -Identity $username_test -ErrorAction Stop
+        $username = $username_details.SamAccountName
+        $validusername = $false
+        
+    } catch {
+        Write-Host "The Username '$username_test' does not exist." -ForegroundColor Red
+        $choice = Read-Host "Would you like to try again? (Y/N)"
+        
+        if ($choice -eq 'N' -or $choice -eq 'n'){
+            exit
+        }
+    }
+}
+
+$username_name = $username_details.Name
+$username_verify = Read-Host -Prompt "Are you sure you want to Terminate the following user? (Y/N) $username_name"
+if ($username_verify -eq 'Y' -or $username_verify -eq 'y'){
+    
+}else{
+    exit
+}
 
 #Email Setup
 $EmailTo = "desktoptechs@doi.nyc.gov", "SecurityAlert@doi.nyc.gov"

@@ -1,7 +1,10 @@
 Import-Module ActiveDirectory
 
-#Input your domain admin credentials
+#Email Setup
 $From = Read-Host -Prompt "Please enter YOUR Email Address"
+$EmailTo = "email2@test.com", "email@test.com"
+
+#Input your domain admin credentials
 $domain_username = Read-Host -Prompt "Enter YOUR ADMIN domain\username"
 $credientials = Get-Credential -UserName $domain_username -Message 'Enter Admin Password'
 
@@ -24,6 +27,7 @@ while ($validusername){
     }
 }
 
+#Verify the Account termination
 $username_name = $username_details.Name
 $username_verify = Read-Host -Prompt "Are you sure you want to Terminate the following user? (Y/N) $username_name"
 if ($username_verify -eq 'Y' -or $username_verify -eq 'y'){
@@ -31,9 +35,6 @@ if ($username_verify -eq 'Y' -or $username_verify -eq 'y'){
 }else{
     exit
 }
-
-#Email Setup
-$EmailTo = "desktoptechs@doi.nyc.gov", "SecurityAlert@doi.nyc.gov"
 
 #Assigned memberships
 $assignedgroups = Get-ADPrincipalGroupMembership -Identity $username | Select-Object Name | Out-String
@@ -63,7 +64,7 @@ foreach ($membership in $membershipgroups){
 $username_details = Get-ADUser -Identity $username
 Move-ADObject -Identity $username_details.distinguishedName -TargetPath 'DistiguishedName' -Credential $credientials
 
-# Create the folder on Home and Profile Archive
+#Move the Home and Profile folders to the Archive server. 
 Invoke-Command -ComputerName "doidc02" -Credential $credientials -ScriptBlock {
     $Folder_Name = $using:username
     $Path1 = "\\Server\Path\$Folder_Name"
@@ -77,11 +78,11 @@ Invoke-Command -ComputerName "doidc02" -Credential $credientials -ScriptBlock {
     $Source_Profile_folder = "\\Server\Path\$Folder_name"
     $Destination_Profile_folder = "\\Server\Path\$Folder_name"
     
-    #--------------Execute Command--------------------------------------------
+    #Robocopy Execute 
     robocopy $Source_Home_Folder $Destination_Home_Folder /COPYALL /Z /E /W:1 /R:2 /tee /Move 
     robocopy $Source_Profile_folder $Destination_Profile_folder /COPYALL /Z /E /W:1 /R:2 /tee /Move 
 }
 
-#--------------Send Email when completed----------------------------------
+#Sent Email with user's memberships
 $fullname = $username_details.Name
 Send-MailMessage -From $From -To $EmailTo -Subject "Departed User $fullname" -body "The Departed account $fullname is now completed. Their home and profile folders have been moved to the Archived Server. Here is a list of Group Memberships he/she was assigned to: `n$assignedgroups" -SmtpServer 'smtp.doi.nycnet' -Port '25'

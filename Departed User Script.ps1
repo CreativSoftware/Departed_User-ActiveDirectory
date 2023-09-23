@@ -65,7 +65,7 @@ $username_details = Get-ADUser -Identity $username
 Move-ADObject -Identity $username_details.distinguishedName -TargetPath 'DistiguishedName' -Credential $credientials
 
 #Move the Home and Profile folders to the Archive server. 
-Invoke-Command -ComputerName "doidc02" -Credential $credientials -ScriptBlock {
+Invoke-Command -ComputerName "servername" -Credential $credientials -ScriptBlock {
     $Folder_Name = $using:username
     $Path1 = "\\Server\Path\$Folder_Name"
     New-Item -Path $Path1 -ItemType Directory 

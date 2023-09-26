@@ -14,12 +14,22 @@ while ($validusername){
     $username_test = Read-Host -Prompt "Please enter the username of the terminated account"
     try {
         $username_details = Get-ADUser -Identity $username_test -ErrorAction Stop
+        $name_string = $username_details.Name.ToString()
+        if ($username_details.distinguishedName -eq "CN=$name_string,OU=Departed Users,DC=DOI,DC=NYCNET"){
+            Write-Host "The user $name_string is already departed." -ForegroundColor Red
+            $choice = Read-Host "Would you like to try another username? (Y/N)"
+            if ($choice -eq 'N' -or $choice -eq 'n'){
+                exit
+            }else{
+                continue
+            }
+        }
         $username = $username_details.SamAccountName
         $validusername = $false
         
     } catch {
-        Write-Host "The Username '$username_test' does not exist." -ForegroundColor Red
-        $choice = Read-Host "Would you like to try again? (Y/N)"
+        Write-Host "The username '$username_test' does not exist." -ForegroundColor Red
+        $choice = Read-Host "Would you like to try another username? (Y/N)"
         
         if ($choice -eq 'N' -or $choice -eq 'n'){
             exit

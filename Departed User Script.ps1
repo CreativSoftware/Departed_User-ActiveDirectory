@@ -46,6 +46,17 @@ if ($username_verify -eq 'Y' -or $username_verify -eq 'y'){
     exit
 }
 
+#Specify a time the script will run.
+$time = Read-Host -Prompt "What time?"
+$targetTime = [datetime]$time
+$buffer = [timespan]::FromMinutes(5)
+$currentTime = Get-Date
+
+while ($currentTime -lt $targetTime -or $currentTime -gt ($targetTime + $buffer)) {
+    Start-Sleep -Seconds 5  
+    $currentTime = Get-Date
+}
+
 #Assigned memberships
 $assignedgroups = Get-ADPrincipalGroupMembership -Identity $username | Select-Object Name | Out-String
 

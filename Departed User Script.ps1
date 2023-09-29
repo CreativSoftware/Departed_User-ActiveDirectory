@@ -47,7 +47,7 @@ if ($username_verify -eq 'Y' -or $username_verify -eq 'y'){
 }
 
 #Specify a time the script will run.
-$time = Read-Host -Prompt "What time?"
+$time = Read-Host -Prompt "What time would you like disabled the account?"
 $targetTime = [datetime]$time
 $buffer = [timespan]::FromMinutes(5)
 $currentTime = Get-Date

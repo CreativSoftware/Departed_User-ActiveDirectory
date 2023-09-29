@@ -15,7 +15,7 @@ while ($validusername){
     try {
         $username_details = Get-ADUser -Identity $username_test -ErrorAction Stop
         $name_string = $username_details.Name.ToString()
-        if ($username_details.distinguishedName -eq "CN=$name_string,OU=Departed Users,DC=DOI,DC=NYCNET"){
+        if ($username_details.distinguishedName -eq "CN=$name_string,distinguishedName"){
             Write-Host "The user $name_string is already departed." -ForegroundColor Red
             $choice = Read-Host "Would you like to try another username? (Y/N)"
             if ($choice -eq 'N' -or $choice -eq 'n'){

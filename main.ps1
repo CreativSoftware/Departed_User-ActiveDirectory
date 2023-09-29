@@ -4,9 +4,26 @@ Import-Module ActiveDirectory
 $From = Read-Host -Prompt "Please enter YOUR Email Address"
 $EmailTo = "email2@test.com", "email@test.com"
 
-#Input your domain admin credentials
-$domain_username = Read-Host -Prompt "Enter YOUR ADMIN domain\username"
-$credientials = Get-Credential -UserName $domain_username -Message 'Enter Admin Password'
+#Input your domain credientials and verifies them.
+$authenticate = $true
+$attempts = 3
+while ($authenticate) {
+    $domain_username = Read-Host -Prompt "Enter YOUR ADMIN domain\username"
+    $credientials = Get-Credential -UserName $domain_username -Message 'Enter Admin Password'
+    try {
+        $session = New-PSSession -ComputerName 'computername' -Credential $cred -ErrorAction Stop
+        Remove-PSSession $session
+        Write-Host "Authentication successful" -ForegroundColor Green
+        $authenticate = $false
+    } catch {
+        $attempts = $attempts - 1
+        if ($attempts -eq 0){
+            Write-Host "Too many failed attempts. Exiting console." -ForegroundColor Red
+            exit
+        }
+        Write-Host "Failed to authenticate please try again. $attempts attempts remaining." -ForegroundColor Red
+    }
+}
 
 #Ask for Terminated useraccount, check to make sure the username is active.
 $validusername = $true
